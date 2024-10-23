@@ -11,7 +11,8 @@
                   "skipFiles": [
                         "<node_internals>/**"
                   ],
-                  "program": "${workspaceFolder}/dates.js"
+                  "console": "integratedTerminal",
+                  "program": "${file}"
             }
       ]
 }
