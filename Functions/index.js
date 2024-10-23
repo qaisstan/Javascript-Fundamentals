@@ -1,94 +1,137 @@
 // Import Sample Data
-import employees from "./data.json" assert { type: "json" };
+import employees from './data.json' assert { type: 'json' }
 
-import createPrompt from "prompt-sync";
+import createPrompt from 'prompt-sync';
 let prompt = createPrompt();
 
-function getInput(promptText, Validator, transformer) {
+const logEmployee = (employee) => {
+  Object.entries(employee).forEach(entry => {
+    console.log(`${entry[0]}: ${entry[1]}`);
+  });
+}
+
+function getInput(promptText, validator, transformer) {
   let value = prompt(promptText);
+  if (validator && !validator(value)) {
+    console.error(`--Invalid input`);
+    return getInput(promptText, validator, transformer);
+  }
+  if(transformer) {
+    return transformer(value);
+  }
   return value;
 }
 
-// Application Commands ----------------------------------------------------------------------
-function listEmployees() {
-  console.log(`Employee List --------------------`);
-  console.log("");
+// Validator functions ---------------------------------------------------
 
-  for (let emp of employee) {
-    for (let property in emp) {
-      console.log(`${property} ${emp[property]}`);
+const isStringInputValid = (input) => {
+  return (input) ? true : false;
+}
+
+const isBooleanInputValid = function (input) {
+  return (input === "yes" || input === "no");
+}
+
+const isIntegerValid = (min, max) => {
+  return (input) => {
+    let numValue = Number(input);
+    if (!Number.isInteger(numValue) || numValue < min || numValue > max) {
+      return false;
     }
-    console.log("");
-    prompt("Press enter to continue...");
+    return true;
   }
-  console.log("The employee list is completed!");
+}
+
+// Application commands --------------------------------------------------
+
+function listEmployees() {
+  console.log(`Employee List ----------------------------`);
+  console.log('');
+
+  employees.forEach(e => {
+    logEmployee(e);
+    prompt('Press enter to continue...');
+  });
+  console.log(`Employee list completed`);
 }
 
 function addEmployee() {
-  console.log(`Add Employee ---------------------`);
-  console.log("");
-
-  let newEmployee = {};
-  let startDateMonth = prompt("Employee Start Date Month (1-12): ");
-  startDateMonth = Number(startDateMonth);
-  // Check if it is a valid integer
-  if (!Number.isInteger(startDateMonth)) {
-    console.error(`Enter a valid start date month`);
-    process.exit(1);
-  }
-  // Check if the number is in the range
-  if (startDateMonth < 1 || startDateMonth > 12) {
-    console.error(`Enter a start date month within the correct range`);
-    process.exit(1);
-  }
-
-  let startDateDay = prompt("Employee Start Date Day (1-31): ");
-  startDateDay = Number(startDateDay);
-  // Check if it is a valid integer
-  if (!Number.isInteger(startDateDay)) {
-    console.error(`Enter a valid start date day`);
-    process.exit(1);
-  }
-  // Check if the number is in the range
-  if (startDateDay < 1 || startDateDay > 31) {
-    console.error(`Enter a start date day within the correct range`);
-    process.exit(1);
-  }
-
-  // Date elements are correct, let's create the date
-  employee.startDate = new Date(
-    startDateYear,
-    startDateMonth - 1,
-    startDateDay
-  );
-
-  let isActive = prompt("Is employee active (yes or no): ");
-  // Check if incorrect value was entered
-  if (isActive !== "yes" && isActive !== "no") {
-    console.error(`Enter yes or no for employee active status`);
-    process.exit(1);
-  }
-  employee.isActive = isActive === "yes";
-
+  console.log(`Add Employee -----------------------------`);
+  console.log('');
+  let employee = {};
+  employee.firstName = getInput("First Name: ", isStringInputValid);
+  employee.lastName = getInput("Last Name: ", isStringInputValid);
+  let startDateYear = getInput("Employee Start Year (1990-2023): ", isIntegerValid(1990, 2023));
+  let startDateMonth = getInput("Employee Start Date Month (1-12): ", isIntegerValid(1, 12));
+  let startDateDay = getInput("Employee Start Date Day (1-31): ", isIntegerValid(1, 31));
+  employee.startDate = new Date(startDateYear, startDateMonth - 1, startDateDay);
+  employee.isActive = getInput("Is employee active (yes or no): ", isBooleanInputValid, i => (i === "yes"));
+  
   // Output Employee JSON
   const json = JSON.stringify(employee, null, 2);
   console.log(`Employee: ${json}`);
 }
-// Application Execution ---------------------------------------------------------------------
+
+// Search for employees by id
+function searchById() {
+ const id = getInput("Employee ID: ", null, Number);
+ const result = employees.find(e => e.id === id);
+ if (result) {
+    console.log("");
+    logEmployee(result);
+  } else {
+    console.log("No results...");
+  }
+}
+
+// Search for employees by name
+function searchByName() {
+  const firstNameSearch = getInput("First Name: ").toLowerCase();
+  const lastNameSearch = getInput("Last Name: ").toLowerCase();
+  const results = employees.filter(e => {
+    if (firstNameSearch && !e.firstName.toLowerCase().includes(firstNameSearch)) {
+      return false;
+    }
+    if (lastNameSearch && !e.lastName.toLowerCase().includes(lastNameSearch)) {
+      return false;
+    }
+    return true;
+  });
+  results.forEach((e, idx) => {
+    console.log("");
+    console.log(`Search Result ${idx + 1} -------------------------------------`);
+    logEmployee(e);
+  });
+}
+
+// Application execution -------------------------------------------------
 
 // Get the command the user wants to exexcute
 const command = process.argv[2].toLowerCase();
 
 switch (command) {
-  case "list":
+
+  case 'list':
     listEmployees();
     break;
 
-  case "add":
+  case 'add':
     addEmployee();
     break;
 
+  case 'search-by-id':
+    searchById();
+    break;
+
+  case 'search-by-name':
+    searchByName();
+    break;
+
   default:
-    console.log("Unsupported command. Exiting...");
+    console.log('Unsupported command. Exiting...');
     process.exit(1);
+
 }
+
+
+
