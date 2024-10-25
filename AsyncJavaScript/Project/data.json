@@ -658,5 +658,14 @@
     "dateBirth": "1993-06-06",
     "startDate": "2012-01-04",
     "isActive": true
+  },
+  {
+    "id": 60,
+    "firstName": "William",
+    "lastName": "Rogers",
+    "startDate": "2000-02-03T05:00:00.000Z",
+    "isActive": true,
+    "salaryUSD": "100000",
+    "localCurrency": "GBP"
   }
 ]
